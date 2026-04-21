@@ -1,0 +1,78 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>
+
+<%=project.title%>
+
+</h3>
+
+<img src="/uploads/<%=project.image%>" width="300" class="mb-3">
+
+<p>
+
+<%=project.description%>
+
+</p>
+
+
+<% if(project.link){ %>
+
+<a href="<%=project.link%>" class="btn btn-primary">
+
+GitHub
+
+</a>
+
+<% } %>
+
+
+<hr>
+
+<h4>Comments</h4>
+
+<% comments.forEach(c=>{ %>
+
+<p>
+
+<b>
+
+<%=c.userEmail%>
+
+</b>
+
+:
+
+<%=c.text%>
+
+</p>
+
+<% }) %>
+
+
+<br>
+
+
+<form method="POST" action="/admin/approve/<%=project._id%>">
+
+<button class="btn btn-success">
+
+Approve
+
+</button>
+
+</form>
+
+
+<form method="POST" action="/admin/reject/<%=project._id%>">
+
+<button class="btn btn-danger mt-2">
+
+Reject
+
+</button>
+
+</form>
+
+</div>

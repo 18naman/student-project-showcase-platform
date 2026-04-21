@@ -4,7 +4,10 @@ const bcrypt = require("bcryptjs")
 const Admin = require("../models/admin")
 const Student = require("../models/student")
 const Project = require("../models/project")
+const Comment = require("../models/comment")
 
+
+// admin login page
 
 router.get("/login",(req,res)=>{
 
@@ -12,6 +15,8 @@ res.render("adminLogin",{error:null})
 
 })
 
+
+// admin login
 
 router.post("/login", async(req,res)=>{
 
@@ -51,6 +56,8 @@ res.redirect("/admin/dashboard")
 })
 
 
+// admin register
+
 router.get("/register",(req,res)=>{
 
 res.render("adminRegister")
@@ -84,6 +91,8 @@ res.redirect("/admin/login")
 })
 
 
+// dashboard
+
 router.get("/dashboard", async(req,res)=>{
 
 if(!req.session.admin)
@@ -104,7 +113,37 @@ projects
 })
 
 
-// approve
+// VIEW project before approve
+
+router.get("/view/:id", async(req,res)=>{
+
+if(!req.session.admin)
+
+return res.redirect("/admin/login")
+
+const project = await Project.findById(
+
+req.params.id
+
+)
+
+const comments = await Comment.find({
+
+projectId:req.params.id
+
+})
+
+res.render("adminViewProject",{
+
+project,
+comments
+
+})
+
+})
+
+
+// approve project
 
 router.post("/approve/:id", async(req,res)=>{
 
@@ -121,7 +160,7 @@ res.redirect("/admin/dashboard")
 })
 
 
-// reject
+// reject project
 
 router.post("/reject/:id", async(req,res)=>{
 
