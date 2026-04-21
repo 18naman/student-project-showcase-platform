@@ -16,7 +16,12 @@
 
 <img src="/uploads/<%=p.image%>" class="img-fluid mb-2">
 
-<p><%=p.description%></p>
+<p>
+
+<%=p.description%>
+
+</p>
+
 
 <p>
 
@@ -26,11 +31,12 @@ Status:
 
 <span class="badge bg-warning">
 
-Waiting for Admin Approval
+Waiting for admin approval
 
 </span>
 
 <% } %>
+
 
 <% if(p.status=="approved"){ %>
 
@@ -40,25 +46,42 @@ Approved
 
 </span>
 
+<div class="alert alert-success mt-2">
+
+<%=p.adminMessage%>
+
+</div>
+
 <% } %>
+
 
 <% if(p.status=="rejected"){ %>
 
 <span class="badge bg-danger">
 
-Rejected by Admin
+Rejected
 
 </span>
+
+<div class="alert alert-danger mt-2">
+
+Reason:
+
+<%=p.adminMessage%>
+
+</div>
 
 <% } %>
 
 </p>
+
 
 <a href="/project/edit/<%=p._id%>" class="btn btn-warning btn-sm">
 
 Edit
 
 </a>
+
 
 <form method="POST" action="/project/delete/<%=p._id%>">
 

@@ -7,7 +7,7 @@ const Project = require("../models/project")
 const Comment = require("../models/comment")
 
 
-// admin login page
+// login
 
 router.get("/login",(req,res)=>{
 
@@ -15,8 +15,6 @@ res.render("adminLogin",{error:null})
 
 })
 
-
-// admin login
 
 router.post("/login", async(req,res)=>{
 
@@ -56,7 +54,7 @@ res.redirect("/admin/dashboard")
 })
 
 
-// admin register
+// register
 
 router.get("/register",(req,res)=>{
 
@@ -67,12 +65,7 @@ res.render("adminRegister")
 
 router.post("/register", async(req,res)=>{
 
-const hash = await bcrypt.hash(
-
-req.body.password,
-10
-
-)
+const hash = await bcrypt.hash(req.body.password,10)
 
 await Admin.create({
 
@@ -113,7 +106,7 @@ projects
 })
 
 
-// VIEW project before approve
+// view project
 
 router.get("/view/:id", async(req,res)=>{
 
@@ -151,7 +144,13 @@ await Project.findByIdAndUpdate(
 
 req.params.id,
 
-{status:"approved"}
+{
+
+status:"approved",
+
+adminMessage:"Project approved successfully"
+
+}
 
 )
 
@@ -160,7 +159,7 @@ res.redirect("/admin/dashboard")
 })
 
 
-// reject project
+// reject project with message
 
 router.post("/reject/:id", async(req,res)=>{
 
@@ -168,7 +167,13 @@ await Project.findByIdAndUpdate(
 
 req.params.id,
 
-{status:"rejected"}
+{
+
+status:"rejected",
+
+adminMessage:req.body.message
+
+}
 
 )
 
@@ -181,7 +186,7 @@ res.redirect("/admin/dashboard")
 
 router.get("/logout",(req,res)=>{
 
-req.session.admin = null
+req.session.admin=null
 
 res.redirect("/admin/login")
 

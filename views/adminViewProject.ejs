@@ -36,13 +36,7 @@ GitHub
 
 <p>
 
-<b>
-
-<%=c.userEmail%>
-
-</b>
-
-:
+<b><%=c.userEmail%></b> :
 
 <%=c.text%>
 
@@ -51,7 +45,9 @@ GitHub
 <% }) %>
 
 
-<br>
+<hr>
+
+<h4>Admin Action</h4>
 
 
 <form method="POST" action="/admin/approve/<%=project._id%>">
@@ -65,9 +61,25 @@ Approve
 </form>
 
 
+<br>
+
+
 <form method="POST" action="/admin/reject/<%=project._id%>">
 
-<button class="btn btn-danger mt-2">
+<label>
+
+Reason for rejection
+
+</label>
+
+<textarea
+name="message"
+class="form-control mb-2"
+placeholder="Write reason for rejection"
+required
+></textarea>
+
+<button class="btn btn-danger">
 
 Reject
 

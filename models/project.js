@@ -20,6 +20,11 @@ type:String,
 default:"pending"
 },
 
+adminMessage:{
+type:String,
+default:""
+},
+
 studentId:String
 
 })
