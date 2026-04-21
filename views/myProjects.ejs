@@ -1,0 +1,51 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>My Projects</h3>
+
+<div class="row">
+
+<% projects.forEach(p=>{ %>
+
+<div class="col-md-4">
+
+<div class="card p-2 shadow">
+
+<h5><%=p.title%></h5>
+
+<img src="/uploads/<%=p.image%>" class="img-fluid">
+
+<p>
+
+Status:
+
+<%= p.approved ? "Approved" : "Waiting for Admin Approval" %>
+
+</p>
+
+<a href="/project/edit/<%=p._id%>" class="btn btn-warning mt-2">
+
+Edit
+
+</a>
+
+<form method="POST" action="/project/delete/<%=p._id%>">
+
+<button class="btn btn-danger mt-2">
+
+Delete
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+<% }) %>
+
+</div>
+
+</div>

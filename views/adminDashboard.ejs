@@ -1,0 +1,117 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>Admin Dashboard</h3>
+
+<h4>Projects</h4>
+
+<table class="table">
+
+<tr>
+
+<th>Title</th>
+
+<th>Status</th>
+
+<th>Approve</th>
+
+<th>Delete</th>
+
+</tr>
+
+<% projects.forEach(p=>{ %>
+
+<tr>
+
+<td><%=p.title%></td>
+
+<td>
+
+<%= p.approved ? "Approved" : "Pending" %>
+
+</td>
+
+<td>
+
+<% if(!p.approved){ %>
+
+<form method="POST" action="/admin/approve/<%=p._id%>">
+
+<button class="btn btn-success btn-sm">
+
+Approve
+
+</button>
+
+</form>
+
+<% } %>
+
+</td>
+
+<td>
+
+<form method="POST" action="/admin/deleteProject/<%=p._id%>">
+
+<button class="btn btn-danger btn-sm">
+
+Delete
+
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+</table>
+
+
+
+<h4>Students</h4>
+
+<table class="table">
+
+<tr>
+
+<th>Name</th>
+
+<th>Email</th>
+
+<th>Delete</th>
+
+</tr>
+
+<% students.forEach(s=>{ %>
+
+<tr>
+
+<td><%=s.name%></td>
+
+<td><%=s.email%></td>
+
+<td>
+
+<form method="POST" action="/admin/deleteStudent/<%=s._id%>">
+
+<button class="btn btn-danger btn-sm">
+
+Delete
+
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+</table>
+
+</div>

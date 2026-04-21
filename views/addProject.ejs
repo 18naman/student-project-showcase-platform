@@ -1,0 +1,25 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>Add Project</h3>
+
+<form method="POST" enctype="multipart/form-data">
+
+<input name="title" class="form-control mb-2" placeholder="Project title">
+
+<textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
+
+<input name="link" class="form-control mb-2" placeholder="Github link (optional)">
+
+<input type="file" name="image" class="form-control mb-2">
+
+<button class="btn btn-primary">
+
+Submit
+
+</button>
+
+</form>
+
+</div>

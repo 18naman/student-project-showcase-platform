@@ -1,0 +1,27 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>Edit Project</h3>
+
+<form method="POST" action="/project/update/<%=project._id%>">
+
+<input name="title" value="<%=project.title%>" class="form-control mb-2">
+
+<textarea name="description" class="form-control mb-2">
+
+<%=project.description%>
+
+</textarea>
+
+<input name="link" value="<%=project.link%>" class="form-control mb-2">
+
+<button class="btn btn-warning">
+
+Update
+
+</button>
+
+</form>
+
+</div>

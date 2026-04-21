@@ -1,0 +1,41 @@
+<%- include("partials/navbar") %>
+
+<div class="container mt-4">
+
+<h3>Explore Projects</h3>
+
+<div class="row">
+
+<% projects.forEach(p=>{ %>
+
+<div class="col-md-4">
+
+<div class="card shadow mb-3">
+
+<img src="/uploads/<%=p.image%>" class="card-img-top">
+
+<div class="card-body">
+
+<h5><%=p.title%></h5>
+
+<p><%=p.description%></p>
+
+<p>❤️ <%=p.likes%></p>
+
+<a href="/project/details/<%=p._id%>" class="btn btn-primary btn-sm">
+
+View
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<% }) %>
+
+</div>
+
+</div>
