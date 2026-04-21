@@ -1,6 +1,6 @@
-const mongoose=require("mongoose")
+const mongoose = require("mongoose")
 
-const schema=new mongoose.Schema({
+const schema = new mongoose.Schema({
 
 title:String,
 
@@ -10,12 +10,18 @@ link:String,
 
 image:String,
 
-likes:{type:Number,default:0},
+likes:{
+type:Number,
+default:0
+},
 
-approved:{type:Boolean,default:false},
+status:{
+type:String,
+default:"pending"
+},
 
 studentId:String
 
 })
 
-module.exports=mongoose.model("Project",schema)
+module.exports = mongoose.model("Project",schema)

@@ -10,21 +10,51 @@
 
 <div class="col-md-4">
 
-<div class="card p-2 shadow">
+<div class="card shadow p-3 mb-3">
 
 <h5><%=p.title%></h5>
 
-<img src="/uploads/<%=p.image%>" class="img-fluid">
+<img src="/uploads/<%=p.image%>" class="img-fluid mb-2">
+
+<p><%=p.description%></p>
 
 <p>
 
 Status:
 
-<%= p.approved ? "Approved" : "Waiting for Admin Approval" %>
+<% if(p.status=="pending"){ %>
+
+<span class="badge bg-warning">
+
+Waiting for Admin Approval
+
+</span>
+
+<% } %>
+
+<% if(p.status=="approved"){ %>
+
+<span class="badge bg-success">
+
+Approved
+
+</span>
+
+<% } %>
+
+<% if(p.status=="rejected"){ %>
+
+<span class="badge bg-danger">
+
+Rejected by Admin
+
+</span>
+
+<% } %>
 
 </p>
 
-<a href="/project/edit/<%=p._id%>" class="btn btn-warning mt-2">
+<a href="/project/edit/<%=p._id%>" class="btn btn-warning btn-sm">
 
 Edit
 
@@ -32,7 +62,7 @@ Edit
 
 <form method="POST" action="/project/delete/<%=p._id%>">
 
-<button class="btn btn-danger mt-2">
+<button class="btn btn-danger btn-sm mt-2">
 
 Delete
 
