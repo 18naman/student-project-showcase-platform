@@ -1,30 +1,46 @@
-const router=require("express").Router()
+const router = require("express").Router()
+const multer = require("multer")
 
-const multer=require("multer")
-
-const Project=require("../models/project")
-
-const Comment=require("../models/comment")
+const Project = require("../models/project")
+const Comment = require("../models/comment")
 
 
-// image storage
+// storage config
 
-const storage=multer.diskStorage({
+const storage = multer.diskStorage({
 
-destination:"uploads",
+destination: function(req,file,cb){
 
-filename:(req,file,cb)=>{
+cb(null,"uploads")
 
-cb(null,Date.now()+file.originalname)
+},
+
+filename: function(req,file,cb){
+
+cb(null, Date.now()+"-"+file.originalname)
 
 }
 
 })
 
-const upload=multer({storage})
+
+// allow optional image
+
+const upload = multer({
+
+storage: storage,
+
+fileFilter: (req,file,cb)=>{
+
+cb(null,true)
+
+}
+
+})
 
 
-// add project page
+
+// ADD PROJECT PAGE
 
 router.get("/add",(req,res)=>{
 
@@ -37,31 +53,34 @@ res.render("addProject")
 })
 
 
-// add project (image optional)
 
-router.post("/add",upload.single("image"),async(req,res)=>{
+// ADD PROJECT (IMAGE OPTIONAL)
 
-let imageName="default.png"
+router.post("/add", upload.single("image"), async(req,res)=>{
 
-if(req.file){
+let imageName = "default.png"
 
-imageName=req.file.filename
+
+if(req.file && req.file.filename){
+
+imageName = req.file.filename
 
 }
 
+
 await Project.create({
 
-title:req.body.title,
+title: req.body.title,
 
-description:req.body.description,
+description: req.body.description,
 
-link:req.body.link,
+link: req.body.link,
 
-image:imageName,
+image: imageName,
 
-studentId:req.session.student._id,
+studentId: req.session.student._id,
 
-status:"pending"
+status: "pending"
 
 })
 
@@ -70,17 +89,18 @@ res.redirect("/project/my")
 })
 
 
-// my projects
 
-router.get("/my",async(req,res)=>{
+// MY PROJECTS
+
+router.get("/my", async(req,res)=>{
 
 if(!req.session.student)
 
 return res.redirect("/login")
 
-const projects=await Project.find({
+const projects = await Project.find({
 
-studentId:req.session.student._id
+studentId: req.session.student._id
 
 })
 
@@ -89,24 +109,22 @@ res.render("myProjects",{projects})
 })
 
 
-// edit project page
 
-router.get("/edit/:id",async(req,res)=>{
+// EDIT PROJECT PAGE
 
-const project=await Project.findById(
+router.get("/edit/:id", async(req,res)=>{
 
-req.params.id
-
-)
+const project = await Project.findById(req.params.id)
 
 res.render("editProject",{project})
 
 })
 
 
-// update project
 
-router.post("/update/:id",async(req,res)=>{
+// UPDATE PROJECT
+
+router.post("/update/:id", async(req,res)=>{
 
 await Project.findByIdAndUpdate(
 
@@ -129,65 +147,56 @@ res.redirect("/project/my")
 })
 
 
-// delete project
 
-router.post("/delete/:id",async(req,res)=>{
+// DELETE PROJECT
 
-await Project.findByIdAndDelete(
+router.post("/delete/:id", async(req,res)=>{
 
-req.params.id
-
-)
+await Project.findByIdAndDelete(req.params.id)
 
 res.redirect("/project/my")
 
 })
 
 
-// project details
 
-router.get("/details/:id",async(req,res)=>{
+// PROJECT DETAILS
 
-const project=await Project.findById(
+router.get("/details/:id", async(req,res)=>{
 
-req.params.id
+const project = await Project.findById(req.params.id)
 
-)
-
-const comments=await Comment.find({
+const comments = await Comment.find({
 
 projectId:req.params.id
 
 })
 
-res.render("projectDetails",{
-
-project,
-comments
-
-})
+res.render("projectDetails",{project,comments})
 
 })
 
 
-// like project
 
-router.post("/like/:id",async(req,res)=>{
+// LIKE
 
-const p=await Project.findById(req.params.id)
+router.post("/like/:id", async(req,res)=>{
 
-p.likes++
+const project = await Project.findById(req.params.id)
 
-await p.save()
+project.likes++
+
+await project.save()
 
 res.redirect("/project/details/"+req.params.id)
 
 })
 
 
-// comment
 
-router.post("/comment/:id",async(req,res)=>{
+// COMMENT
+
+router.post("/comment/:id", async(req,res)=>{
 
 await Comment.create({
 
@@ -203,4 +212,5 @@ res.redirect("/project/details/"+req.params.id)
 
 })
 
-module.exports=router
+
+module.exports = router
