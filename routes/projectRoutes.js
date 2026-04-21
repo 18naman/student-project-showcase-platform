@@ -1,216 +1,125 @@
-const router = require("express").Router()
-const multer = require("multer")
+const router = require("express").Router();
+const multer = require("multer");
 
-const Project = require("../models/project")
-const Comment = require("../models/comment")
-
+const Project = require("../models/project");
+const Comment = require("../models/comment");
 
 // storage config
-
 const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
 
-destination: function(req,file,cb){
-
-cb(null,"uploads")
-
-},
-
-filename: function(req,file,cb){
-
-cb(null, Date.now()+"-"+file.originalname)
-
-}
-
-})
-
-
-// allow optional image
-
+// multer setup
 const upload = multer({
-
-storage: storage,
-
-fileFilter: (req,file,cb)=>{
-
-cb(null,true)
-
-}
-
-})
-
-
+  storage: storage
+});
 
 // ADD PROJECT PAGE
+router.get("/add", (req, res) => {
+  if (!req.session.student) return res.redirect("/login");
 
-router.get("/add",(req,res)=>{
+  res.render("addProject");
+});
 
-if(!req.session.student)
+// ADD PROJECT (image optional)
+router.post("/add", upload.single("image"), async (req, res) => {
+  try {
 
-return res.redirect("/login")
+    let imageName = "default.png";
 
-res.render("addProject")
+    if (req.file) {
+      imageName = req.file.filename;
+    }
 
-})
+    await Project.create({
+      title: req.body.title,
+      description: req.body.description,
+      link: req.body.link || "",
+      image: imageName,
+      studentId: req.session.student._id,
+      status: "pending"
+    });
 
+    res.redirect("/project/my");
 
-
-// ADD PROJECT (IMAGE OPTIONAL)
-
-router.post("/add", upload.single("image"), async(req,res)=>{
-
-let imageName = "default.png"
-
-
-if(req.file && req.file.filename){
-
-imageName = req.file.filename
-
-}
-
-
-await Project.create({
-
-title: req.body.title,
-
-description: req.body.description,
-
-link: req.body.link,
-
-image: imageName,
-
-studentId: req.session.student._id,
-
-status: "pending"
-
-})
-
-res.redirect("/project/my")
-
-})
-
-
+  } catch (err) {
+    console.log(err);
+    res.send("Server error while adding project");
+  }
+});
 
 // MY PROJECTS
+router.get("/my", async (req, res) => {
+  if (!req.session.student) return res.redirect("/login");
 
-router.get("/my", async(req,res)=>{
+  const projects = await Project.find({
+    studentId: req.session.student._id
+  });
 
-if(!req.session.student)
+  res.render("myProjects", { projects });
+});
 
-return res.redirect("/login")
+// EDIT PAGE
+router.get("/edit/:id", async (req, res) => {
+  const project = await Project.findById(req.params.id);
 
-const projects = await Project.find({
-
-studentId: req.session.student._id
-
-})
-
-res.render("myProjects",{projects})
-
-})
-
-
-
-// EDIT PROJECT PAGE
-
-router.get("/edit/:id", async(req,res)=>{
-
-const project = await Project.findById(req.params.id)
-
-res.render("editProject",{project})
-
-})
-
-
+  res.render("editProject", { project });
+});
 
 // UPDATE PROJECT
+router.post("/update/:id", async (req, res) => {
+  await Project.findByIdAndUpdate(req.params.id, {
+    title: req.body.title,
+    description: req.body.description,
+    link: req.body.link
+  });
 
-router.post("/update/:id", async(req,res)=>{
-
-await Project.findByIdAndUpdate(
-
-req.params.id,
-
-{
-
-title:req.body.title,
-
-description:req.body.description,
-
-link:req.body.link
-
-}
-
-)
-
-res.redirect("/project/my")
-
-})
-
-
+  res.redirect("/project/my");
+});
 
 // DELETE PROJECT
+router.post("/delete/:id", async (req, res) => {
+  await Project.findByIdAndDelete(req.params.id);
 
-router.post("/delete/:id", async(req,res)=>{
-
-await Project.findByIdAndDelete(req.params.id)
-
-res.redirect("/project/my")
-
-})
-
-
+  res.redirect("/project/my");
+});
 
 // PROJECT DETAILS
+router.get("/details/:id", async (req, res) => {
+  const project = await Project.findById(req.params.id);
 
-router.get("/details/:id", async(req,res)=>{
+  const comments = await Comment.find({
+    projectId: req.params.id
+  });
 
-const project = await Project.findById(req.params.id)
-
-const comments = await Comment.find({
-
-projectId:req.params.id
-
-})
-
-res.render("projectDetails",{project,comments})
-
-})
-
-
+  res.render("projectDetails", { project, comments });
+});
 
 // LIKE
+router.post("/like/:id", async (req, res) => {
+  const project = await Project.findById(req.params.id);
 
-router.post("/like/:id", async(req,res)=>{
+  project.likes++;
 
-const project = await Project.findById(req.params.id)
+  await project.save();
 
-project.likes++
-
-await project.save()
-
-res.redirect("/project/details/"+req.params.id)
-
-})
-
-
+  res.redirect("/project/details/" + req.params.id);
+});
 
 // COMMENT
+router.post("/comment/:id", async (req, res) => {
+  await Comment.create({
+    text: req.body.text,
+    projectId: req.params.id,
+    userEmail: req.session.student.email
+  });
 
-router.post("/comment/:id", async(req,res)=>{
+  res.redirect("/project/details/" + req.params.id);
+});
 
-await Comment.create({
-
-text:req.body.text,
-
-projectId:req.params.id,
-
-userEmail:req.session.student.email
-
-})
-
-res.redirect("/project/details/"+req.params.id)
-
-})
-
-
-module.exports = router
+module.exports = router;
