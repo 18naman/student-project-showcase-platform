@@ -22,10 +22,19 @@
 
 <p>❤️ <%=p.likes%></p>
 
+<!-- GitHub button -->
+<% if(p.link && p.link.trim() !== ""){ %>
+
+<a href="<%=p.link%>" target="_blank" class="btn btn-dark btn-sm mb-2">
+View on GitHub
+</a>
+
+<% } %>
+
+<br>
+
 <a href="/project/details/<%=p._id%>" class="btn btn-primary btn-sm">
-
 View
-
 </a>
 
 </div>
