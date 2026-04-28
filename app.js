@@ -35,6 +35,7 @@ next()
 app.use("/",require("./routes/authRoutes"))
 app.use("/project",require("./routes/projectRoutes"))
 app.use("/admin",require("./routes/adminRoutes"))
+app.use("/uploads", express.static("uploads"))
 
 const PORT = process.env.PORT || 5000
 
