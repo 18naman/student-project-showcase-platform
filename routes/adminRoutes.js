@@ -192,4 +192,80 @@ res.redirect("/admin/login")
 
 })
 
+// ============================
+// ADMIN FORGOT PASSWORD
+// ============================
+
+// show forgot page
+router.get("/forgot",(req,res)=>{
+
+const captcha = Math.random()
+.toString(36)
+.substring(2,7)
+.toUpperCase()
+
+req.session.captcha = captcha
+
+res.render("adminForgot",{
+
+captcha,
+error:null
+
+})
+
+})
+
+
+// verify captcha + email
+router.post("/forgot", async(req,res)=>{
+
+const admin = await Admin.findOne({
+
+email:req.body.email
+
+})
+
+if(!admin)
+
+return res.render("adminForgot",{
+
+captcha:req.session.captcha,
+error:"Email not found"
+
+})
+
+if(req.body.captcha !== req.session.captcha)
+
+return res.render("adminForgot",{
+
+captcha:req.session.captcha,
+error:"Captcha incorrect"
+
+})
+
+res.render("adminReset",{
+
+email:req.body.email
+
+})
+
+})
+
+
+// reset password
+router.post("/reset-password", async(req,res)=>{
+
+const hash = await bcrypt.hash(req.body.password,10)
+
+await Admin.findOneAndUpdate(
+
+{email:req.body.email},
+
+{password:hash}
+
+)
+
+res.redirect("/admin/login")
+
+})
 module.exports = router
