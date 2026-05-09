@@ -1,77 +1,111 @@
 <%- include("partials/navbar") %>
 
-<div class="container mt-4">
+<div class="container">
 
-<h3><%=project.title%></h3>
+<div class="card p-4 shadow-lg">
 
-<img src="/uploads/<%=project.image%>" width="300">
+<img 
+src="/uploads/<%=project.image%>" 
+class="project-img rounded mb-4"
+>
 
-<p><%=project.description%></p>
+<h1 class="mb-3">
+<%=project.title%>
+</h1>
+
+<div class="mb-3">
+
+<span class="badge bg-info">
+<%=project.category%>
+</span>
+
+</div>
+
+<p class="text-info mb-4">
+Posted on:
+<%= new Date(project.createdAt).toDateString() %>
+</p>
+
+<p class="mb-4">
+<%=project.description%>
+</p>
+
+<div class="d-flex gap-3 align-items-center mb-4">
+
+<span class="fs-5">
+❤️ <%=project.likes%>
+</span>
 
 <% if(project.link){ %>
 
-<a href="<%=project.link%>" class="btn btn-primary">
-
-Github
-
+<a 
+href="<%=project.link%>"
+target="_blank"
+class="btn btn-dark"
+>
+View GitHub
 </a>
 
 <% } %>
 
-<p>
-
-❤️ <%=project.likes%>
-
-</p>
-
-
+</div>
 
 <% if(student){ %>
 
-<form method="POST" action="/project/like/<%=project._id%>">
+<form 
+method="POST"
+action="/project/like/<%=project._id%>"
+>
 
-<button class="btn btn-danger">
-
-Like
-
+<button class="btn btn-danger mb-4">
+❤️ Like Project
 </button>
 
 </form>
 
+<hr class="my-4">
 
-
-<hr>
-
-<h4>Comments</h4>
-
-
+<h3 class="mb-4">
+Comments
+</h3>
 
 <% comments.forEach(c=>{ %>
 
-<p>
+<div class="card p-3 mb-3">
 
-<b><%=c.userEmail%></b> :
+<b class="text-info">
+<%=c.userEmail%>
+</b>
 
+<p class="mt-2 mb-0">
 <%=c.text%>
-
 </p>
+
+</div>
 
 <% }) %>
 
+<form 
+method="POST"
+action="/project/comment/<%=project._id%>"
+class="mt-4"
+>
 
-
-<form method="POST" action="/project/comment/<%=project._id%>">
-
-<input name="text" class="form-control mb-2">
+<textarea
+name="text"
+class="form-control mb-3"
+placeholder="Write your comment..."
+required
+></textarea>
 
 <button class="btn btn-success">
-
-Comment
-
+Add Comment
 </button>
 
 </form>
 
 <% } %>
+
+</div>
 
 </div>

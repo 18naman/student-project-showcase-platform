@@ -1,50 +1,93 @@
 <%- include("partials/navbar") %>
 
-<div class="container mt-4">
+<div class="container d-flex justify-content-center">
 
-<h3>Add Project</h3>
+<div class="card p-5 shadow-lg" style="width:700px">
+
+<h2 class="mb-4 text-center">
+Upload New Project
+</h2>
 
 <form method="POST" enctype="multipart/form-data">
 
 <input 
-name="title" 
-class="form-control mb-2" 
+name="title"
+class="form-control mb-3"
 placeholder="Project Title"
 required
 >
 
-<textarea 
-name="description" 
-class="form-control mb-2" 
-placeholder="Description"
+<textarea
+name="description"
+class="form-control mb-3"
+rows="5"
+placeholder="Project Description"
 required
 ></textarea>
 
-<input 
-name="link" 
-class="form-control mb-2" 
-placeholder="GitHub link (optional)"
->
-
-<label>
-
-Upload Project Image
-
-</label>
-
-<input 
-type="file" 
-name="image" 
-class="form-control mb-2"
+<select
+name="category"
+class="form-control mb-3"
 required
 >
 
-<button class="btn btn-primary">
+<option value="">
+Select Category
+</option>
 
-Submit
+<option>
+Web Development
+</option>
 
+<option>
+AI/ML
+</option>
+
+<option>
+IoT
+</option>
+
+<option>
+Mobile App
+</option>
+
+<option>
+Cyber Security
+</option>
+
+<option>
+Blockchain
+</option>
+
+<option>
+Cloud Computing
+</option>
+
+</select>
+
+<input
+name="link"
+class="form-control mb-3"
+placeholder="GitHub Link"
+>
+
+<label class="mb-2">
+Project Image
+</label>
+
+<input
+type="file"
+name="image"
+class="form-control mb-4"
+required
+>
+
+<button class="btn btn-primary w-100">
+Upload Project
 </button>
 
 </form>
+
+</div>
 
 </div>

@@ -6,266 +6,306 @@ const Student = require("../models/student")
 const Project = require("../models/project")
 const Comment = require("../models/comment")
 
+const {
+    isAdmin
+} = require("../middleware/authMiddleware")
 
-// login
 
-router.get("/login",(req,res)=>{
+// LOGIN PAGE
 
-res.render("adminLogin",{error:null})
+router.get("/login", (req, res) => {
 
+    res.render("adminLogin", {
+        error: null
+    })
 })
 
 
-router.post("/login", async(req,res)=>{
+// LOGIN
 
-const admin = await Admin.findOne({
+router.post("/login", async (req, res) => {
 
-email:req.body.email
+    try {
 
+        const admin = await Admin.findOne({
+            email: req.body.email
+        })
+
+        if (!admin) {
+
+            return res.render("adminLogin", {
+                error: "Admin not found"
+            })
+        }
+
+        const valid = await bcrypt.compare(
+            req.body.password,
+            admin.password
+        )
+
+        if (!valid) {
+
+            return res.render("adminLogin", {
+                error: "Incorrect password"
+            })
+        }
+
+        req.session.admin = admin
+
+        res.redirect("/admin/dashboard")
+
+    } catch (err) {
+
+        console.log(err)
+
+        res.render("adminLogin", {
+            error: "Login failed"
+        })
+    }
 })
 
-if(!admin)
 
-return res.render("adminLogin",{
+// REGISTER PAGE
 
-error:"Admin not found"
+router.get("/register", (req, res) => {
 
+    res.render("adminRegister", {
+        error: null
+    })
 })
 
-const valid = await bcrypt.compare(
 
-req.body.password,
-admin.password
+// REGISTER
 
+router.post("/register", async (req, res) => {
+
+    try {
+
+        const existing = await Admin.findOne({
+            email: req.body.email
+        })
+
+        if (existing) {
+
+            return res.render("adminRegister", {
+                error: "Email already exists"
+            })
+        }
+
+        const hash = await bcrypt.hash(
+            req.body.password,
+            10
+        )
+
+        await Admin.create({
+
+            name: req.body.name,
+
+            employeeId: req.body.employeeId,
+
+            email: req.body.email,
+
+            password: hash
+        })
+
+        res.redirect("/admin/login")
+
+    } catch (err) {
+
+        console.log(err)
+
+        res.render("adminRegister", {
+            error: "Registration failed"
+        })
+    }
+})
+
+
+// DASHBOARD
+
+router.get("/dashboard", isAdmin, async (req, res) => {
+
+    const students = await Student.find()
+
+    const projects = await Project.find()
+
+    res.render("adminDashboard", {
+
+        students,
+        projects
+    })
+})
+
+
+// VIEW PROJECT
+
+router.get("/view/:id", isAdmin, async (req, res) => {
+
+    const project = await Project.findById(
+        req.params.id
+    )
+
+    if (!project) {
+        return res.redirect("/admin/dashboard")
+    }
+
+    const comments = await Comment.find({
+
+        projectId: req.params.id
+    })
+
+    res.render("adminViewProject", {
+
+        project,
+        comments
+    })
+})
+
+
+// APPROVE
+
+router.post("/approve/:id", isAdmin, async (req, res) => {
+
+    await Project.findByIdAndUpdate(
+
+        req.params.id,
+
+        {
+
+            status: "approved",
+
+            adminMessage:
+                "Project approved successfully"
+        }
+    )
+
+    res.redirect("/admin/dashboard")
+})
+
+
+// REJECT
+
+router.post("/reject/:id", isAdmin, async (req, res) => {
+
+    await Project.findByIdAndUpdate(
+
+        req.params.id,
+
+        {
+
+            status: "rejected",
+
+            adminMessage: req.body.message
+        }
+    )
+
+    res.redirect("/admin/dashboard")
+})
+
+
+// DELETE STUDENT
+
+router.post(
+    "/deleteStudent/:id",
+    isAdmin,
+    async (req, res) => {
+
+        await Student.findByIdAndDelete(
+            req.params.id
+        )
+
+        res.redirect("/admin/dashboard")
+    }
 )
 
-if(!valid)
 
-return res.render("adminLogin",{
+// LOGOUT
 
-error:"Incorrect password"
+router.get("/logout", (req, res) => {
 
-})
+    req.session.admin = null
 
-req.session.admin = admin
-
-res.redirect("/admin/dashboard")
-
+    res.redirect("/admin/login")
 })
 
 
-// register
+// FORGOT PASSWORD
 
-router.get("/register",(req,res)=>{
+router.get("/forgot", (req, res) => {
 
-res.render("adminRegister")
+    const captcha = Math.random()
+        .toString(36)
+        .substring(2, 7)
+        .toUpperCase()
 
+    req.session.captcha = captcha
+
+    res.render("adminForgot", {
+
+        captcha,
+        error: null
+    })
 })
 
 
-router.post("/register", async(req,res)=>{
+// VERIFY CAPTCHA
 
-const hash = await bcrypt.hash(req.body.password,10)
+router.post("/forgot", async (req, res) => {
 
-await Admin.create({
+    const admin = await Admin.findOne({
 
-name:req.body.name,
+        email: req.body.email
+    })
 
-employeeId:req.body.employeeId,
+    if (!admin) {
 
-email:req.body.email,
+        return res.render("adminForgot", {
 
-password:hash
+            captcha: req.session.captcha,
 
-})
+            error: "Email not found"
+        })
+    }
 
-res.redirect("/admin/login")
+    if (
+        req.body.captcha !== req.session.captcha
+    ) {
 
-})
+        return res.render("adminForgot", {
 
+            captcha: req.session.captcha,
 
-// dashboard
+            error: "Captcha incorrect"
+        })
+    }
 
-router.get("/dashboard", async(req,res)=>{
+    res.render("adminReset", {
 
-if(!req.session.admin)
-
-return res.redirect("/admin/login")
-
-const students = await Student.find()
-
-const projects = await Project.find()
-
-res.render("adminDashboard",{
-
-students,
-projects
-
-})
-
+        email: req.body.email
+    })
 })
 
 
-// view project
+// RESET PASSWORD
 
-router.get("/view/:id", async(req,res)=>{
+router.post(
+    "/reset-password",
+    async (req, res) => {
 
-if(!req.session.admin)
+        const hash = await bcrypt.hash(
+            req.body.password,
+            10
+        )
 
-return res.redirect("/admin/login")
+        await Admin.findOneAndUpdate(
 
-const project = await Project.findById(
+            { email: req.body.email },
 
-req.params.id
+            { password: hash }
+        )
 
+        res.redirect("/admin/login")
+    }
 )
 
-const comments = await Comment.find({
-
-projectId:req.params.id
-
-})
-
-res.render("adminViewProject",{
-
-project,
-comments
-
-})
-
-})
-
-
-// approve project
-
-router.post("/approve/:id", async(req,res)=>{
-
-await Project.findByIdAndUpdate(
-
-req.params.id,
-
-{
-
-status:"approved",
-
-adminMessage:"Project approved successfully"
-
-}
-
-)
-
-res.redirect("/admin/dashboard")
-
-})
-
-
-// reject project with message
-
-router.post("/reject/:id", async(req,res)=>{
-
-await Project.findByIdAndUpdate(
-
-req.params.id,
-
-{
-
-status:"rejected",
-
-adminMessage:req.body.message
-
-}
-
-)
-
-res.redirect("/admin/dashboard")
-
-})
-
-
-// logout
-
-router.get("/logout",(req,res)=>{
-
-req.session.admin=null
-
-res.redirect("/admin/login")
-
-})
-
-// ============================
-// ADMIN FORGOT PASSWORD
-// ============================
-
-// show forgot page
-router.get("/forgot",(req,res)=>{
-
-const captcha = Math.random()
-.toString(36)
-.substring(2,7)
-.toUpperCase()
-
-req.session.captcha = captcha
-
-res.render("adminForgot",{
-
-captcha,
-error:null
-
-})
-
-})
-
-
-// verify captcha + email
-router.post("/forgot", async(req,res)=>{
-
-const admin = await Admin.findOne({
-
-email:req.body.email
-
-})
-
-if(!admin)
-
-return res.render("adminForgot",{
-
-captcha:req.session.captcha,
-error:"Email not found"
-
-})
-
-if(req.body.captcha !== req.session.captcha)
-
-return res.render("adminForgot",{
-
-captcha:req.session.captcha,
-error:"Captcha incorrect"
-
-})
-
-res.render("adminReset",{
-
-email:req.body.email
-
-})
-
-})
-
-
-// reset password
-router.post("/reset-password", async(req,res)=>{
-
-const hash = await bcrypt.hash(req.body.password,10)
-
-await Admin.findOneAndUpdate(
-
-{email:req.body.email},
-
-{password:hash}
-
-)
-
-res.redirect("/admin/login")
-
-})
 module.exports = router

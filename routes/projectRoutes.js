@@ -1,181 +1,265 @@
 const router = require("express").Router()
-
 const multer = require("multer")
+const path = require("path")
 
 const Project = require("../models/project")
-
 const Comment = require("../models/comment")
 
+const {
+    isStudent
+} = require("../middleware/authMiddleware")
 
-// image storage config
+
+// MULTER STORAGE
 
 const storage = multer.diskStorage({
 
-destination: "uploads",
+    destination: "public/uploads",
 
-filename: (req,file,cb)=>{
+    filename: (req, file, cb) => {
 
-cb(null, Date.now() + file.originalname)
-
-}
-
+        cb(
+            null,
+            Date.now() + path.extname(file.originalname)
+        )
+    }
 })
 
-const upload = multer({ storage })
+const upload = multer({
+    storage
+})
 
 
 // ADD PROJECT PAGE
 
-router.get("/add",(req,res)=>{
+router.get("/add", isStudent, (req, res) => {
 
-if(!req.session.student)
-
-return res.redirect("/login")
-
-res.render("addProject")
-
+    res.render("addProject")
 })
 
 
-// ADD PROJECT (image required)
+// ADD PROJECT
 
-router.post("/add", upload.single("image"), async(req,res)=>{
+router.post(
+    "/add",
+    isStudent,
+    upload.single("image"),
+    async (req, res) => {
 
-await Project.create({
+        try {
 
-title: req.body.title,
+            if (!req.file) {
 
-description: req.body.description,
+                return res.send("Image required")
+            }
 
-link: req.body.link,
+            await Project.create({
 
-image: req.file.filename,
+                title: req.body.title,
 
-studentId: req.session.student._id,
+                description: req.body.description,
 
-status:"pending"
+                category: req.body.category,
 
-})
+                link: req.body.link,
 
-res.redirect("/project/my")
+                image: req.file.filename,
 
-})
+                studentId: req.session.student._id,
+
+                status: "pending"
+            })
+
+            res.redirect("/project/my")
+
+        } catch (err) {
+
+            console.log(err)
+
+            res.send("Error uploading project")
+        }
+    }
+)
 
 
 // MY PROJECTS
 
-router.get("/my", async(req,res)=>{
+router.get("/my", isStudent, async (req, res) => {
 
-if(!req.session.student)
+    const projects = await Project.find({
 
-return res.redirect("/login")
+        studentId: req.session.student._id
+    })
 
-const projects = await Project.find({
-
-studentId:req.session.student._id
-
-})
-
-res.render("myProjects",{projects})
-
+    res.render("myProjects", {
+        projects
+    })
 })
 
 
-// EDIT PROJECT PAGE
+// EDIT PAGE
 
-router.get("/edit/:id", async(req,res)=>{
+router.get("/edit/:id", isStudent, async (req, res) => {
 
-const project = await Project.findById(req.params.id)
+    const project = await Project.findById(
+        req.params.id
+    )
 
-res.render("editProject",{project})
+    if (!project) {
+        return res.redirect("/project/my")
+    }
 
+    if (
+        project.studentId != req.session.student._id
+    ) {
+        return res.redirect("/project/my")
+    }
+
+    res.render("editProject", {
+        project
+    })
 })
 
 
 // UPDATE PROJECT
 
-router.post("/update/:id", async(req,res)=>{
+router.post("/update/:id", isStudent, async (req, res) => {
 
-await Project.findByIdAndUpdate(
+    const project = await Project.findById(
+        req.params.id
+    )
 
-req.params.id,
+    if (!project) {
+        return res.redirect("/project/my")
+    }
 
-{
+    if (
+        project.studentId != req.session.student._id
+    ) {
+        return res.redirect("/project/my")
+    }
 
-title:req.body.title,
+    await Project.findByIdAndUpdate(
 
-description:req.body.description,
+        req.params.id,
 
-link:req.body.link
+        {
 
-}
+            title: req.body.title,
 
-)
+            description: req.body.description,
 
-res.redirect("/project/my")
+            link: req.body.link,
 
+            status: "pending",
+
+            adminMessage: ""
+        }
+    )
+
+    res.redirect("/project/my")
 })
 
 
 // DELETE PROJECT
 
-router.post("/delete/:id", async(req,res)=>{
+router.post("/delete/:id", isStudent, async (req, res) => {
 
-await Project.findByIdAndDelete(req.params.id)
+    const project = await Project.findById(
+        req.params.id
+    )
 
-res.redirect("/project/my")
+    if (!project) {
+        return res.redirect("/project/my")
+    }
 
+    if (
+        project.studentId != req.session.student._id
+    ) {
+        return res.redirect("/project/my")
+    }
+
+    await Project.findByIdAndDelete(
+        req.params.id
+    )
+
+    res.redirect("/project/my")
 })
 
 
 // PROJECT DETAILS
 
-router.get("/details/:id", async(req,res)=>{
+router.get("/details/:id", async (req, res) => {
 
-const project = await Project.findById(req.params.id)
+    const project = await Project.findById(
+        req.params.id
+    )
 
-const comments = await Comment.find({
+    if (!project) {
+        return res.redirect("/")
+    }
 
-projectId:req.params.id
+    const comments = await Comment.find({
 
+        projectId: req.params.id
+    })
+
+    res.render("projectDetails", {
+
+        project,
+        comments
+    })
 })
 
-res.render("projectDetails",{project,comments})
 
-})
+// LIKE PROJECT
 
+router.post("/like/:id", isStudent, async (req, res) => {
 
-// LIKE
+    const project = await Project.findById(
+        req.params.id
+    )
 
-router.post("/like/:id", async(req,res)=>{
+    if (!project) {
+        return res.redirect("/")
+    }
 
-const project = await Project.findById(req.params.id)
+    project.likes++
 
-project.likes++
+    await project.save()
 
-await project.save()
-
-res.redirect("/project/details/"+req.params.id)
-
+    res.redirect(
+        "/project/details/" + req.params.id
+    )
 })
 
 
 // COMMENT
 
-router.post("/comment/:id", async(req,res)=>{
+router.post(
+    "/comment/:id",
+    isStudent,
+    async (req, res) => {
 
-await Comment.create({
+        if (!req.body.text) {
+            return res.redirect(
+                "/project/details/" + req.params.id
+            )
+        }
 
-text:req.body.text,
+        await Comment.create({
 
-projectId:req.params.id,
+            text: req.body.text,
 
-userEmail:req.session.student.email
+            projectId: req.params.id,
 
-})
+            userEmail: req.session.student.email
+        })
 
-res.redirect("/project/details/"+req.params.id)
-
-})
+        res.redirect(
+            "/project/details/" + req.params.id
+        )
+    }
+)
 
 module.exports = router

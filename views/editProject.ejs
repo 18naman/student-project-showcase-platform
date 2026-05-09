@@ -1,27 +1,41 @@
 <%- include("partials/navbar") %>
 
-<div class="container mt-4">
+<div class="container d-flex justify-content-center">
 
-<h3>Edit Project</h3>
+<div class="card p-5 shadow-lg" style="width:700px">
+
+<h2 class="mb-4 text-center">
+Edit Project
+</h2>
 
 <form method="POST" action="/project/update/<%=project._id%>">
 
-<input name="title" value="<%=project.title%>" class="form-control mb-2">
+<input
+name="title"
+value="<%=project.title%>"
+class="form-control mb-3"
+required
+>
 
-<textarea name="description" class="form-control mb-2">
+<textarea
+name="description"
+class="form-control mb-3"
+rows="5"
+required
+><%=project.description%></textarea>
 
-<%=project.description%>
+<input
+name="link"
+value="<%=project.link%>"
+class="form-control mb-4"
+>
 
-</textarea>
-
-<input name="link" value="<%=project.link%>" class="form-control mb-2">
-
-<button class="btn btn-warning">
-
-Update
-
+<button class="btn btn-warning w-100">
+Update Project
 </button>
 
 </form>
+
+</div>
 
 </div>

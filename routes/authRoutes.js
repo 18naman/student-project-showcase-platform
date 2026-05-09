@@ -5,109 +5,221 @@ const Student = require("../models/student")
 const Project = require("../models/project")
 
 
-// EXPLORE
+// HOME / EXPLORE
 
 router.get("/", async (req, res) => {
 
-const projects = await Project.find({ status: "approved" })
+    const selectedCategory = req.query.category
 
-res.render("explore", { projects })
+    let filter = {
+        status: "approved"
+    }
 
+    if (selectedCategory) {
+
+        filter.category = selectedCategory
+    }
+
+    const projects = await Project.find(filter)
+    .sort({ createdAt: -1 })
+
+    res.render("explore", {
+
+        projects,
+        selectedCategory
+    })
+})
+
+
+// LOGIN PAGE
+
+router.get("/login", (req, res) => {
+
+    res.render("login", {
+        error: null
+    })
 })
 
 
 // LOGIN
 
-router.get("/login", (req, res) => {
-res.render("login", { error: null })
-})
-
 router.post("/login", async (req, res) => {
 
-const student = await Student.findOne({ email: req.body.email })
+    try {
 
-if (!student)
-return res.render("login", { error: "Email not registered" })
+        const student = await Student.findOne({
+            email: req.body.email
+        })
 
-const valid = await bcrypt.compare(req.body.password, student.password)
+        if (!student) {
 
-if (!valid)
-return res.render("login", { error: "Incorrect password" })
+            return res.render("login", {
+                error: "Email not registered"
+            })
+        }
 
-req.session.student = student
+        const valid = await bcrypt.compare(
+            req.body.password,
+            student.password
+        )
 
-res.redirect("/")
+        if (!valid) {
+
+            return res.render("login", {
+                error: "Incorrect password"
+            })
+        }
+
+        req.session.student = student
+
+        res.redirect("/")
+
+    } catch (err) {
+
+        console.log(err)
+
+        res.render("login", {
+            error: "Something went wrong"
+        })
+    }
+})
+
+
+// REGISTER PAGE
+
+router.get("/register", (req, res) => {
+
+    res.render("register", {
+        error: null
+    })
 })
 
 
 // REGISTER
 
-router.get("/register", (req, res) => {
-res.render("register")
-})
-
 router.post("/register", async (req, res) => {
 
-const hash = await bcrypt.hash(req.body.password, 10)
+    try {
 
-await Student.create({
-name: req.body.name,
-usn: req.body.usn,
-email: req.body.email,
-password: hash
-})
+        const existingEmail = await Student.findOne({
+            email: req.body.email
+        })
 
-res.redirect("/login")
+        if (existingEmail) {
+
+            return res.render("register", {
+                error: "Email already exists"
+            })
+        }
+
+        const existingUsn = await Student.findOne({
+            usn: req.body.usn
+        })
+
+        if (existingUsn) {
+
+            return res.render("register", {
+                error: "USN already exists"
+            })
+        }
+
+        const hash = await bcrypt.hash(
+            req.body.password,
+            10
+        )
+
+        await Student.create({
+
+            name: req.body.name,
+            usn: req.body.usn,
+            email: req.body.email,
+            password: hash
+        })
+
+        res.redirect("/login")
+
+    } catch (err) {
+
+        console.log(err)
+
+        res.render("register", {
+            error: "Registration failed"
+        })
+    }
 })
 
 
 // LOGOUT
 
 router.get("/logout", (req, res) => {
-req.session.destroy()
-res.redirect("/")
+
+    req.session.destroy()
+
+    res.redirect("/")
 })
 
 
 // PROFILE
 
 router.get("/profile", (req, res) => {
-if (!req.session.student) return res.redirect("/login")
-res.render("profile", { user: req.session.student })
+
+    if (!req.session.student) {
+        return res.redirect("/login")
+    }
+
+    res.render("profile", {
+        user: req.session.student
+    })
 })
 
 
-// ============================
-// FORGOT PASSWORD (STUDENT)
-// ============================
+// FORGOT PASSWORD
 
 router.get("/forgot", (req, res) => {
 
-const captcha = Math.random().toString(36).substring(2, 7).toUpperCase()
+    const captcha = Math.random()
+        .toString(36)
+        .substring(2, 7)
+        .toUpperCase()
 
-req.session.captcha = captcha
+    req.session.captcha = captcha
 
-res.render("forgot", { captcha, error: null })
+    res.render("forgot", {
+        captcha,
+        error: null
+    })
 })
 
+
+// VERIFY FORGOT PASSWORD
 
 router.post("/forgot", async (req, res) => {
 
-const student = await Student.findOne({ email: req.body.email })
+    const student = await Student.findOne({
+        email: req.body.email
+    })
 
-if (!student)
-return res.render("forgot", {
-captcha: req.session.captcha,
-error: "Email not registered"
-})
+    if (!student) {
 
-if (req.body.captcha !== req.session.captcha)
-return res.render("forgot", {
-captcha: req.session.captcha,
-error: "Captcha incorrect"
-})
+        return res.render("forgot", {
+            captcha: req.session.captcha,
+            error: "Email not registered"
+        })
+    }
 
-res.render("resetPassword", { email: req.body.email })
+    if (
+        req.body.captcha !== req.session.captcha
+    ) {
+
+        return res.render("forgot", {
+            captcha: req.session.captcha,
+            error: "Captcha incorrect"
+        })
+    }
+
+    res.render("resetPassword", {
+        email: req.body.email
+    })
 })
 
 
@@ -115,14 +227,17 @@ res.render("resetPassword", { email: req.body.email })
 
 router.post("/reset-password", async (req, res) => {
 
-const hash = await bcrypt.hash(req.body.password, 10)
+    const hash = await bcrypt.hash(
+        req.body.password,
+        10
+    )
 
-await Student.findOneAndUpdate(
-{ email: req.body.email },
-{ password: hash }
-)
+    await Student.findOneAndUpdate(
+        { email: req.body.email },
+        { password: hash }
+    )
 
-res.redirect("/login")
+    res.redirect("/login")
 })
 
 module.exports = router

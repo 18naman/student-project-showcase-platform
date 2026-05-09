@@ -1,24 +1,26 @@
 <%- include("partials/navbar") %>
 
-<div class="container mt-4">
+<div class="container">
 
-<h3>Admin Dashboard</h3>
+<h1 class="mb-5">
+Admin Dashboard
+</h1>
 
-<h4>Projects</h4>
+<div class="card p-4 mb-5">
 
-<table class="table">
+<h3 class="mb-4">
+Projects
+</h3>
+
+<div class="table-responsive">
+
+<table class="table align-middle">
 
 <tr>
 
 <th>Title</th>
-
 <th>Status</th>
-
-<th>View</th>
-
-<th>Approve</th>
-
-<th>Reject</th>
+<th>Actions</th>
 
 </tr>
 
@@ -27,60 +29,45 @@
 <tr>
 
 <td>
-
 <%=p.title%>
-
 </td>
 
 <td>
 
-<%=p.status%>
+<% if(p.status=="pending"){ %>
+
+<span class="badge bg-warning text-dark">
+Pending
+</span>
+
+<% } %>
+
+<% if(p.status=="approved"){ %>
+
+<span class="badge bg-success">
+Approved
+</span>
+
+<% } %>
+
+<% if(p.status=="rejected"){ %>
+
+<span class="badge bg-danger">
+Rejected
+</span>
+
+<% } %>
 
 </td>
 
-<td>
+<td class="d-flex gap-2">
 
-<a href="/admin/view/<%=p._id%>" class="btn btn-primary btn-sm">
-
+<a 
+href="/admin/view/<%=p._id%>"
+class="btn btn-primary btn-sm"
+>
 View
-
 </a>
-
-</td>
-
-<td>
-
-<% if(p.status=="pending"){ %>
-
-<form method="POST" action="/admin/approve/<%=p._id%>">
-
-<button class="btn btn-success btn-sm">
-
-Approve
-
-</button>
-
-</form>
-
-<% } %>
-
-</td>
-
-<td>
-
-<% if(p.status=="pending"){ %>
-
-<form method="POST" action="/admin/reject/<%=p._id%>">
-
-<button class="btn btn-danger btn-sm">
-
-Reject
-
-</button>
-
-</form>
-
-<% } %>
 
 </td>
 
@@ -90,18 +77,24 @@ Reject
 
 </table>
 
+</div>
 
+</div>
 
-<h4>Students</h4>
+<div class="card p-4">
 
-<table class="table">
+<h3 class="mb-4">
+Students
+</h3>
+
+<div class="table-responsive">
+
+<table class="table align-middle">
 
 <tr>
 
 <th>Name</th>
-
 <th>Email</th>
-
 <th>Delete</th>
 
 </tr>
@@ -111,25 +104,22 @@ Reject
 <tr>
 
 <td>
-
 <%=s.name%>
-
 </td>
 
 <td>
-
 <%=s.email%>
-
 </td>
 
 <td>
 
-<form method="POST" action="/admin/deleteStudent/<%=s._id%>">
+<form 
+method="POST"
+action="/admin/deleteStudent/<%=s._id%>"
+>
 
 <button class="btn btn-danger btn-sm">
-
 Delete
-
 </button>
 
 </form>
@@ -141,5 +131,9 @@ Delete
 <% }) %>
 
 </table>
+
+</div>
+
+</div>
 
 </div>

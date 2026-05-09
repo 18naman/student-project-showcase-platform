@@ -1,32 +1,53 @@
 const mongoose = require("mongoose")
 
-const schema = new mongoose.Schema({
+const projectSchema = new mongoose.Schema({
 
-title:String,
+    title: {
+        type: String,
+        required: true
+    },
 
-description:String,
+    description: {
+        type: String,
+        required: true
+    },
 
-link:String,
+    category: {
+    type: String,
+    required: true
+    },
 
-image:String,
+    link: {
+    type: String,
+    default: ""
+    },
 
-likes:{
-type:Number,
-default:0
-},
+    image: {
+        type: String,
+        required: true
+    },
 
-status:{
-type:String,
-default:"pending"
-},
+    likes: {
+        type: Number,
+        default: 0
+    },
 
-adminMessage:{
-type:String,
-default:""
-},
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending"
+    },
 
-studentId:String
+    adminMessage: {
+        type: String,
+        default: ""
+    },
 
-})
+    studentId: {
+        type: String,
+        required: true
+    }
 
-module.exports = mongoose.model("Project",schema)
+}, { timestamps: true })
+
+module.exports = mongoose.model("Project", projectSchema)
